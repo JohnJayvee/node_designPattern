@@ -69,7 +69,21 @@ exports.login = async (req, res, next) => {
 };
 
 exports.logout = (req, res) => {
-    req.logout(err => {
+    const token = req.header('Authorization');
+    if (!token || !token.startsWith('Bearer ')) {
+        return res.status(401).json({ msg: 'No token provided' });
+    }
+
+    const tokenPayload = jwt.verify(token.replace('Bearer ', ''), 'your_secret_key');
+    if (!tokenPayload) {
+        return res.status(401).json({ msg: 'Invalid token' });
+    }
+
+    if (!req.isAuthenticated()) {
+        return res.status(401).json({ msg: 'You are not logged in' });
+    }
+
+    req.logout((err) => {
         if (err) return res.status(500).json({ msg: 'Logout error', error: err });
         res.json({ msg: 'You are logged out' });
     });
